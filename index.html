@@ -1,0 +1,373 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>DELUXE | Meeting Room Availability</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 2vh 2vw;
+    background: #101827;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2vh;
+}
+
+.brand h1 {
+    color: #ff003b;
+    font-size: clamp(28px, 4vw, 64px);
+    font-weight: 900;
+    letter-spacing: -2px;
+    margin: 0;
+}
+
+.location {
+    color: #9ac8ff;
+    font-size: clamp(14px, 1.7vw, 28px);
+    margin-top: 5px;
+}
+
+.logo {
+    color: #ff003b;
+    font-size: clamp(24px, 3vw, 48px);
+    font-weight: bold;
+}
+
+h2 {
+    text-align: center;
+    font-size: clamp(18px, 2.5vw, 40px);
+    margin: 0 0 1vh;
+}
+
+#date {
+    text-align: center;
+    color: #cbd5e1;
+    font-size: clamp(14px, 1.5vw, 24px);
+    margin-bottom: 2vh;
+}
+
+#timetable {
+    display: grid;
+    grid-template-columns: 9% repeat(4, minmax(0, 1fr));
+    grid-template-rows: 1.3fr repeat(10, 1fr) auto;
+    gap: 5px;
+    flex: 1;
+    min-height: 0;
+}
+
+.room-heading {
+    background: #263449;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: clamp(12px, 1.5vw, 25px);
+}
+
+.room-number {
+    font-size: clamp(20px, 2.8vw, 45px);
+    font-weight: bold;
+}
+
+.time {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    font-size: clamp(13px, 1.6vw, 26px);
+    font-weight: bold;
+}
+
+.booking {
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+    min-height: 0;
+}
+
+.slot {
+    flex: 1;
+    min-height: 0;
+}
+
+.available {
+    background: #16834b;
+}
+
+.booked {
+    background: #c52e40;
+}
+
+.unknown {
+    background: #475569;
+}
+
+.status-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: clamp(10px, 1.3vw, 22px);
+}
+
+footer {
+    margin-top: 1.5vh;
+    text-align: center;
+}
+
+.legend {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    font-size: clamp(12px, 1.3vw, 20px);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.colour {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+}
+
+#updated {
+    color: #94a3b8;
+    font-size: clamp(10px, 1vw, 16px);
+    margin-top: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="brand">
+        <h1>DELUXE</h1>
+        <div class="location">
+            98 Theobalds Road - 1st Floor
+        </div>
+    </div>
+    <div class="logo">deluxe.</div>
+</header>
+
+<h2>MEETING ROOM AVAILABILITY</h2>
+
+<div id="date"></div>
+
+<div id="timetable"></div>
+
+<footer>
+    <div class="legend">
+        <div class="legend-item">
+            <span class="colour available"></span>
+            Available
+        </div>
+
+        <div class="legend-item">
+            <span class="colour booked"></span>
+            Booked
+        </div>
+
+        <div class="legend-item">
+            <span class="colour unknown"></span>
+            Data unavailable
+        </div>
+    </div>
+
+    <div id="updated">Loading booking data...</div>
+</footer>
+
+<script>
+
+const rooms = ["1.22", "1.23", "1.24", "1.25"];
+const timezone = "Europe/London";
+
+function todayKey() {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: timezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }).formatToParts(new Date());
+
+    const part = type =>
+        parts.find(p => p.type === type).value;
+
+    return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+function showDate() {
+    document.getElementById("date").textContent =
+        new Date().toLocaleDateString("en-GB", {
+            timeZone: timezone,
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+        });
+}
+
+function render(data) {
+
+    const grid = document.getElementById("timetable");
+    grid.innerHTML = "";
+
+    grid.appendChild(document.createElement("div"));
+
+    rooms.forEach(number => {
+        const heading = document.createElement("div");
+        heading.className = "room-heading";
+        heading.innerHTML =
+            `Meeting Room<span class="room-number">${number}</span>`;
+        grid.appendChild(heading);
+    });
+
+    for (let hour = 9; hour < 19; hour++) {
+
+        const time = document.createElement("div");
+        time.className = "time";
+        time.textContent =
+            String(hour).padStart(2, "0") + ":00";
+
+        grid.appendChild(time);
+
+        rooms.forEach(number => {
+
+            const room = data?.rooms?.find(
+                r => r.name === "Meeting Room " + number
+            );
+
+            const availability =
+                typeof room?.availability === "string" &&
+                /^[01?]{40}$/.test(room.availability)
+                ? room.availability
+                : "?".repeat(40);
+
+            const start = (hour - 9) * 4;
+            const slots = availability.slice(start, start + 4);
+
+            const cell = document.createElement("div");
+            cell.className = "booking";
+
+            for (const status of slots) {
+
+                const slot = document.createElement("div");
+
+                slot.className = "slot " +
+                    (status === "0" ? "available" :
+                     status === "1" ? "booked" :
+                     "unknown");
+
+                cell.appendChild(slot);
+            }
+
+            const labels = {
+                "0000": "AVAILABLE",
+                "1111": "BOOKED",
+                "????": "NO DATA"
+            };
+
+            if (labels[slots]) {
+                const label = document.createElement("div");
+                label.className = "status-label";
+                label.textContent = labels[slots];
+                cell.appendChild(label);
+            }
+
+            grid.appendChild(cell);
+        });
+    }
+
+    const end = document.createElement("div");
+    end.className = "time";
+    end.textContent = "19:00";
+    grid.appendChild(end);
+}
+
+async function loadBookings() {
+
+    showDate();
+
+    try {
+
+        const response = await fetch(
+            "bookings.json?t=" + Date.now(),
+            { cache: "no-store" }
+        );
+
+        if (!response.ok) {
+            throw new Error("Booking file unavailable");
+        }
+
+        const data = await response.json();
+
+        const updated = new Date(data.updated);
+        const age = Date.now() - updated.getTime();
+
+        if (
+            data.date !== todayKey() ||
+            !Number.isFinite(age) ||
+            age < -60000 ||
+            age > 15 * 60 * 1000
+        ) {
+            render(null);
+
+            document.getElementById("updated").textContent =
+                "Booking data is outdated - awaiting update";
+
+            return;
+        }
+
+        render(data);
+
+        document.getElementById("updated").textContent =
+            "Last updated: " +
+            updated.toLocaleTimeString("en-GB", {
+                timeZone: timezone
+            });
+
+    } catch (error) {
+
+        render(null);
+
+        document.getElementById("updated").textContent =
+            "Booking data unavailable - awaiting connection";
+    }
+}
+
+render(null);
+loadBookings();
+
+setInterval(loadBookings, 60000);
+
+</script>
+
+</body>
+</html>
