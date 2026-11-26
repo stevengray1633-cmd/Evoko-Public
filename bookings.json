@@ -1,26 +1,26 @@
 {
-  "date": "2026-11-26",
-  "updated": "2026-11-26T13:56:00+00:00",
-  "location": "98 Theobalds Road - 1st Floor",
-  "start": "09:00",
-  "end": "19:00",
-  "interval": 15,
-  "rooms": [
-    {
-      "name": "Meeting Room 1.22",
-      "availability": "0000111100001111000011110000000000000000"
-    },
-    {
-      "name": "Meeting Room 1.23",
-      "availability": "1111000000001111000000001111000000000000"
-    },
-    {
-      "name": "Meeting Room 1.24",
-      "availability": "0000000011111111000000000000111100000000"
-    },
-    {
-      "name": "Meeting Room 1.25",
-      "availability": "0000001100000000111100000011000000000000"
-    }
-  ]
+    "date":  "2026-11-26",
+    "updated":  "2026-11-26T15:23:09.0722963+00:00",
+    "location":  "98 Theobalds Road - 1st Floor",
+    "start":  "09:00",
+    "end":  "19:00",
+    "interval":  15,
+    "rooms":  [
+                  {
+                      "name":  "Meeting Room 1.22",
+                      "availability":  "0000002222000000220000000000000000000000"
+                  },
+                  {
+                      "name":  "Meeting Room 1.23",
+                      "availability":  "0000222200220000000000222222000000000000"
+                  },
+                  {
+                      "name":  "Meeting Room 1.24",
+                      "availability":  "0000222222222200000000000000000000000000"
+                  },
+                  {
+                      "name":  "Meeting Room 1.25",
+                      "availability":  "0000222200000000000022220000000000000000"
+                  }
+              ]
 }
