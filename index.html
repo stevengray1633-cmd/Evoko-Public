@@ -48,15 +48,16 @@ header {
     margin-top: 5px;
 }
 
-/* DELUXE FACILITIES LOGO - DOUBLE SIZE */
+/* DELUXE FACILITIES LOGO - REDUCED SIZE */
 
 .logo {
-    height: clamp(160px, 28vh, 320px);
+    height: clamp(80px, 14vh, 160px);
     width: auto;
-    max-width: 50vw;
+    max-width: 25vw;
     object-fit: contain;
     border-radius: 8px;
     display: block;
+    flex-shrink: 0;
 }
 
 /* TITLE */
@@ -268,6 +269,29 @@ function showDate() {
         });
 }
 
+/* NORMALISE OUTLOOK BOOKING STATUS */
+
+function normaliseAvailability(value) {
+
+    if (typeof value !== "string" || value.length !== 40) {
+        return "?".repeat(40);
+    }
+
+    return value.split("").map(status => {
+
+        if (status === "0") {
+            return "0";
+        }
+
+        if (["1", "2", "3", "4"].includes(status)) {
+            return "1";
+        }
+
+        return "?";
+
+    }).join("");
+}
+
 /* DISPLAY MEETING ROOM BOOKINGS */
 
 function render(data) {
@@ -309,16 +333,12 @@ function render(data) {
             );
 
             const availability =
-                typeof room?.availability === "string" &&
-                /^[012?]{40}$/.test(room.availability)
-                ? room.availability
-                : "?".repeat(40);
+                normaliseAvailability(room?.availability);
 
             const start = (hour - 9) * 4;
 
-            const slots = availability
-                .slice(start, start + 4)
-                .replace(/2/g, "1");
+            const slots =
+                availability.slice(start, start + 4);
 
             const cell = document.createElement("div");
 
@@ -406,7 +426,6 @@ async function loadBookings() {
                 "Booking data is outdated - awaiting update";
 
             return;
-
         }
 
         render(data);
