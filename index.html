@@ -18,18 +18,20 @@ body {
     background: #101827;
     color: #ffffff;
     font-family: Arial, Helvetica, sans-serif;
-    width: 100%;
     height: 100vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
+/* HEADER */
+
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2vh;
+    gap: 20px;
 }
 
 .brand h1 {
@@ -46,11 +48,18 @@ header {
     margin-top: 5px;
 }
 
+/* DELUXE FACILITIES LOGO */
+
 .logo {
-    color: #ff003b;
-    font-size: clamp(24px, 3vw, 48px);
-    font-weight: bold;
+    height: clamp(80px, 14vh, 160px);
+    width: auto;
+    max-width: 25vw;
+    object-fit: contain;
+    border-radius: 8px;
+    display: block;
 }
+
+/* TITLE */
 
 h2 {
     text-align: center;
@@ -65,15 +74,15 @@ h2 {
     margin-bottom: 2vh;
 }
 
+/* MEETING ROOM TIMETABLE */
+
 #timetable {
     display: grid;
     grid-template-columns: 9% repeat(4, minmax(0, 1fr));
-    grid-template-rows: 1.3fr repeat(10, 1fr) auto;
+    grid-template-rows: 1.3fr repeat(10, minmax(0, 1fr)) auto;
     gap: 5px;
     flex: 1;
     min-height: 0;
-    min-width: 0;
-    width: 100%;
 }
 
 .room-heading {
@@ -107,13 +116,14 @@ h2 {
     overflow: hidden;
     position: relative;
     min-height: 0;
-    min-width: 0;
 }
 
 .slot {
     flex: 1;
     min-height: 0;
 }
+
+/* BOOKING COLOURS */
 
 .available {
     background: #16834b;
@@ -136,6 +146,8 @@ h2 {
     font-weight: bold;
     font-size: clamp(10px, 1.3vw, 22px);
 }
+
+/* FOOTER */
 
 footer {
     margin-top: 1.5vh;
@@ -172,13 +184,21 @@ footer {
 <body>
 
 <header>
+
     <div class="brand">
         <h1>DELUXE</h1>
+
         <div class="location">
             98 Theobalds Road - 1st Floor
         </div>
     </div>
-    <div class="logo">deluxe.</div>
+
+    <img
+        class="logo"
+        src="https://stevengray1633-cmd.github.io/Deluxe-Hotdesks-Public/deluxe-facilities-logo.png"
+        alt="Deluxe Facilities"
+    >
+
 </header>
 
 <h2>MEETING ROOM AVAILABILITY</h2>
@@ -188,6 +208,7 @@ footer {
 <div id="timetable"></div>
 
 <footer>
+
     <div class="legend">
 
         <div class="legend-item">
@@ -207,13 +228,18 @@ footer {
 
     </div>
 
-    <div id="updated">Loading booking data...</div>
+    <div id="updated">
+        Loading booking data...
+    </div>
+
 </footer>
 
 <script>
 
 const rooms = ["1.22", "1.23", "1.24", "1.25"];
 const timezone = "Europe/London";
+
+/* CURRENT DATE */
 
 function todayKey() {
 
@@ -242,26 +268,7 @@ function showDate() {
         });
 }
 
-function normaliseAvailability(value) {
-
-    if (typeof value !== "string" || value.length !== 40) {
-        return "?".repeat(40);
-    }
-
-    return value.split("").map(status => {
-
-        if (status === "0") {
-            return "0";
-        }
-
-        if (["1", "2", "3", "4"].includes(status)) {
-            return "1";
-        }
-
-        return "?";
-
-    }).join("");
-}
+/* DISPLAY MEETING ROOM BOOKINGS */
 
 function render(data) {
 
@@ -281,6 +288,7 @@ function render(data) {
             `Meeting Room<span class="room-number">${number}</span>`;
 
         grid.appendChild(heading);
+
     });
 
     for (let hour = 9; hour < 19; hour++) {
@@ -301,12 +309,16 @@ function render(data) {
             );
 
             const availability =
-                normaliseAvailability(room?.availability);
+                typeof room?.availability === "string" &&
+                /^[012?]{40}$/.test(room.availability)
+                ? room.availability
+                : "?".repeat(40);
 
             const start = (hour - 9) * 4;
 
-            const slots =
-                availability.slice(start, start + 4);
+            const slots = availability
+                .slice(start, start + 4)
+                .replace(/2/g, "1");
 
             const cell = document.createElement("div");
 
@@ -322,6 +334,7 @@ function render(data) {
                      "unknown");
 
                 cell.appendChild(slot);
+
             }
 
             const labels = {
@@ -339,10 +352,13 @@ function render(data) {
                 label.textContent = labels[slots];
 
                 cell.appendChild(label);
+
             }
 
             grid.appendChild(cell);
+
         });
+
     }
 
     const end = document.createElement("div");
@@ -353,6 +369,8 @@ function render(data) {
 
     grid.appendChild(end);
 }
+
+/* RETRIEVE BOOKING DATA */
 
 async function loadBookings() {
 
@@ -388,6 +406,7 @@ async function loadBookings() {
                 "Booking data is outdated - awaiting update";
 
             return;
+
         }
 
         render(data);
@@ -404,8 +423,12 @@ async function loadBookings() {
 
         document.getElementById("updated").textContent =
             "Booking data unavailable - awaiting connection";
+
     }
+
 }
+
+/* AUTOMATIC REFRESH EVERY 60 SECONDS */
 
 render(null);
 
