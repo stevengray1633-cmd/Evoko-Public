@@ -18,6 +18,7 @@ body {
     background: #101827;
     color: #ffffff;
     font-family: Arial, Helvetica, sans-serif;
+    width: 100%;
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -71,6 +72,8 @@ h2 {
     gap: 5px;
     flex: 1;
     min-height: 0;
+    min-width: 0;
+    width: 100%;
 }
 
 .room-heading {
@@ -104,6 +107,7 @@ h2 {
     overflow: hidden;
     position: relative;
     min-height: 0;
+    min-width: 0;
 }
 
 .slot {
@@ -185,6 +189,7 @@ footer {
 
 <footer>
     <div class="legend">
+
         <div class="legend-item">
             <span class="colour available"></span>
             Available
@@ -199,6 +204,7 @@ footer {
             <span class="colour unknown"></span>
             Data unavailable
         </div>
+
     </div>
 
     <div id="updated">Loading booking data...</div>
@@ -210,6 +216,7 @@ const rooms = ["1.22", "1.23", "1.24", "1.25"];
 const timezone = "Europe/London";
 
 function todayKey() {
+
     const parts = new Intl.DateTimeFormat("en-GB", {
         timeZone: timezone,
         year: "numeric",
@@ -224,6 +231,7 @@ function todayKey() {
 }
 
 function showDate() {
+
     document.getElementById("date").textContent =
         new Date().toLocaleDateString("en-GB", {
             timeZone: timezone,
@@ -234,25 +242,53 @@ function showDate() {
         });
 }
 
+function normaliseAvailability(value) {
+
+    if (typeof value !== "string" || value.length !== 40) {
+        return "?".repeat(40);
+    }
+
+    return value.split("").map(status => {
+
+        if (status === "0") {
+            return "0";
+        }
+
+        if (["1", "2", "3", "4"].includes(status)) {
+            return "1";
+        }
+
+        return "?";
+
+    }).join("");
+}
+
 function render(data) {
 
     const grid = document.getElementById("timetable");
+
     grid.innerHTML = "";
 
     grid.appendChild(document.createElement("div"));
 
     rooms.forEach(number => {
+
         const heading = document.createElement("div");
+
         heading.className = "room-heading";
+
         heading.innerHTML =
             `Meeting Room<span class="room-number">${number}</span>`;
+
         grid.appendChild(heading);
     });
 
     for (let hour = 9; hour < 19; hour++) {
 
         const time = document.createElement("div");
+
         time.className = "time";
+
         time.textContent =
             String(hour).padStart(2, "0") + ":00";
 
@@ -265,15 +301,15 @@ function render(data) {
             );
 
             const availability =
-                typeof room?.availability === "string" &&
-                /^[01?]{40}$/.test(room.availability)
-                ? room.availability
-                : "?".repeat(40);
+                normaliseAvailability(room?.availability);
 
             const start = (hour - 9) * 4;
-            const slots = availability.slice(start, start + 4);
+
+            const slots =
+                availability.slice(start, start + 4);
 
             const cell = document.createElement("div");
+
             cell.className = "booking";
 
             for (const status of slots) {
@@ -295,9 +331,13 @@ function render(data) {
             };
 
             if (labels[slots]) {
+
                 const label = document.createElement("div");
+
                 label.className = "status-label";
+
                 label.textContent = labels[slots];
+
                 cell.appendChild(label);
             }
 
@@ -306,8 +346,11 @@ function render(data) {
     }
 
     const end = document.createElement("div");
+
     end.className = "time";
+
     end.textContent = "19:00";
+
     grid.appendChild(end);
 }
 
@@ -329,6 +372,7 @@ async function loadBookings() {
         const data = await response.json();
 
         const updated = new Date(data.updated);
+
         const age = Date.now() - updated.getTime();
 
         if (
@@ -337,6 +381,7 @@ async function loadBookings() {
             age < -60000 ||
             age > 15 * 60 * 1000
         ) {
+
             render(null);
 
             document.getElementById("updated").textContent =
@@ -363,6 +408,7 @@ async function loadBookings() {
 }
 
 render(null);
+
 loadBookings();
 
 setInterval(loadBookings, 60000);
